@@ -1,4 +1,5 @@
 ---
+permalink: /docs/agents/overview/
 title: Agent System
 ---
 

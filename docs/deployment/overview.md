@@ -1,4 +1,5 @@
 ---
+permalink: /docs/deployment/overview/
 title: Deployment Guide
 ---
 

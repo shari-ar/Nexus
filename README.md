@@ -35,7 +35,7 @@ Docker
 
 The technical documentation starts at [docs/README.md](docs/README.md) and covers architecture, agents, workflows, deployment, and operations.
 
-The GitHub Pages website is built with Jekyll 3.10 and deployed by `.github/workflows/pages.yml` whenever documentation or site files change on `main`.
+The GitHub Pages website source lives in `docs/`, is built with Jekyll 3.10, and is deployed by `.github/workflows/pages.yml` whenever documentation or site files change on `main`.
 
 # Project Directory Structure
 

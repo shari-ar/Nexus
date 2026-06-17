@@ -9,17 +9,15 @@ permalink: pretty
 exclude:
   - Gemfile
   - Gemfile.lock
-  - README.md
   - vendor
   - .bundle
-  - .github
 collections: []
 defaults:
   - scope:
       path: ""
     values:
-      layout: default
-  - scope:
-      path: "docs"
-    values:
       layout: docs
+  - scope:
+      path: "index.md"
+    values:
+      layout: default

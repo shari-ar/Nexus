@@ -1,4 +1,5 @@
 ---
+permalink: /docs/operations/overview/
 title: Operations Guide
 ---
 

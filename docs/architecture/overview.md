@@ -1,4 +1,5 @@
 ---
+permalink: /docs/architecture/overview/
 title: Architecture Overview
 ---
 

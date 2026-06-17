@@ -1,4 +1,5 @@
 ---
+permalink: /docs/workflows/overview/
 title: Workflow System
 ---
 

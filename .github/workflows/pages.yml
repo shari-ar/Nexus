@@ -6,12 +6,6 @@ on:
       - main
     paths:
       - "docs/**"
-      - "_config.yml"
-      - "_includes/**"
-      - "_layouts/**"
-      - "assets/**"
-      - "index.md"
-      - "Gemfile"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -27,6 +21,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,10 +33,13 @@ jobs:
         with:
           ruby-version: "3.1"
           bundler-cache: true
+          working-directory: docs
 
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Build with Jekyll 3.10
         run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
@@ -47,7 +47,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./_site
+          path: docs/_site
 
   deploy:
     environment:
