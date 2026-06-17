@@ -1,0 +1,21 @@
+# Local environment
+.env
+
+# Nexus runtime data
+data/**
+!data/.gitkeep
+logs/**
+!logs/.gitkeep
+memory/**
+!memory/.gitkeep
+models/**
+!models/.gitkeep
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Editor and OS files
+.DS_Store
+.vscode/
+.idea/

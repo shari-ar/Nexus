@@ -19,13 +19,13 @@ At a high level, Nexus provides:
 
 The technical documentation lives in [`docs/`](docs/README.md) and is published as a Jekyll 3.10 GitHub Pages site. The documentation is organized around the main platform concerns:
 
-- [Architecture](docs/architecture/overview.md) explains the system layers, request lifecycle, component boundaries, and extensibility model.
-- [Agents](docs/agents/overview.md) defines the supervisor contract, specialized agent roles, delegation flow, tool access, model selection, and validation approach.
-- [Workflows](docs/workflows/overview.md) describes how Nexus routes requests through intake, classification, planning, execution, review, integration, and persistence.
-- [Deployment](docs/deployment/overview.md) outlines the Docker-native local deployment model, service groups, environment configuration, startup sequence, and distributed-readiness principles.
-- [Operations](docs/operations/overview.md) covers observability, artifact management, memory operations, backups, restores, health checks, failure handling, and maintenance.
-- [Directory Structure](docs/reference/directory-structure.md) documents the planned repository layout, directory responsibilities, and placement rules.
-- [Roadmap](docs/roadmap.md) defines measurable DevOps and developer milestones for v1.0 and v2.0.
+- [Architecture](https://shari-ar.github.io/Nexus/docs/architecture/overview/) explains the system layers, request lifecycle, component boundaries, and extensibility model.
+- [Agents](https://shari-ar.github.io/Nexus/docs/agents/overview/) defines the supervisor contract, specialized agent roles, delegation flow, tool access, model selection, and validation approach.
+- [Workflows](https://shari-ar.github.io/Nexus/docs/workflows/overview/) describes how Nexus routes requests through intake, classification, planning, execution, review, integration, and persistence.
+- [Deployment](https://shari-ar.github.io/Nexus/docs/deployment/overview/) outlines the Docker-native local deployment model, service groups, environment configuration, startup sequence, and distributed-readiness principles.
+- [Operations](https://shari-ar.github.io/Nexus/docs/operations/overview/) covers observability, artifact management, memory operations, backups, restores, health checks, failure handling, and maintenance.
+- [Directory Structure](https://shari-ar.github.io/Nexus/docs/reference/directory-structure/) documents the planned repository layout, directory responsibilities, and placement rules.
+- [Roadmap](https://shari-ar.github.io/Nexus/docs/roadmap/) defines measurable DevOps and developer milestones for v1.0 and v2.0.
 
 ## Roadmap Overview
 
@@ -51,7 +51,8 @@ Nexus is designed to run locally with Docker Compose in development mode. Contri
 git clone https://github.com/shari-ar/Nexus.git
 cd Nexus
 cp .env.example .env
-docker compose -f docker/compose/docker-compose.yml -f docker/compose/docker-compose.dev.yml up
+scripts/bootstrap/dev-env.sh
+docker compose -f docker/compose/docker-compose.yml -f docker/compose/docker-compose.dev.yml up --build
 ```
 
 ### Verify the Development Stack
@@ -59,7 +60,7 @@ docker compose -f docker/compose/docker-compose.yml -f docker/compose/docker-com
 Use the following checks while collaborating on the project:
 
 - Open the local Open WebUI URL configured in `.env`.
-- Run `docker compose ps` to view service status and health checks.
+- Run `docker compose -f docker/compose/docker-compose.yml -f docker/compose/docker-compose.dev.yml ps` to view service status and health checks.
 - Inspect `logs/system/`, `logs/workflows/`, `logs/agents/`, and `logs/models/` for runtime visibility.
 - Check `data/generated/` for generated code, documents, images, videos, and audio artifacts.
 - Check `memory/` for local knowledge, embeddings, conversations, and artifact metadata.
@@ -67,5 +68,5 @@ Use the following checks while collaborating on the project:
 
 ## Contributing
 
-Contributors can start with the [Roadmap](docs/roadmap.md), choose a milestone, and verify each step through its documented Docker dev-mode outcome. DevOps work establishes service reliability, observability, deployment flow, and operational safety. Development work builds agents, workflows, adapters, contracts, validation, and user-visible capabilities on top of that foundation.
+Contributors can start with the [Roadmap](https://shari-ar.github.io/Nexus/docs/roadmap/), choose a milestone, and verify each step through its documented Docker dev-mode outcome. DevOps work establishes service reliability, observability, deployment flow, and operational safety. Development work builds agents, workflows, adapters, contracts, validation, and user-visible capabilities on top of that foundation.
 

@@ -1,0 +1,110 @@
+name: ${COMPOSE_PROJECT_NAME:-nexus}
+
+x-nexus-stub-build: &nexus-stub-build
+  context: ../stubs
+  dockerfile: Dockerfile
+
+x-nexus-common-env: &nexus-common-env
+  NEXUS_ENV: ${NEXUS_ENV:-development}
+  NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-info}
+  NEXUS_SERVICE_VERSION: v0.1
+  NEXUS_LOG_DIR: /var/log/nexus/system
+
+x-nexus-common: &nexus-common
+  restart: unless-stopped
+  networks:
+    - nexus-control-plane
+  volumes:
+    - ../../logs:/var/log/nexus
+    - ../../data:/var/lib/nexus/data
+    - ../../memory:/var/lib/nexus/memory
+  healthcheck:
+    test:
+      - CMD
+      - python
+      - -c
+      - "import os, urllib.request; port = os.environ.get('NEXUS_SERVICE_PORT', '8080'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health', timeout=2).read()"
+    interval: 15s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+
+services:
+  open-webui:
+    <<: *nexus-common
+    build: *nexus-stub-build
+    environment:
+      <<: *nexus-common-env
+      NEXUS_SERVICE_NAME: open-webui
+      NEXUS_SERVICE_ROLE: Primary user interface placeholder
+      NEXUS_SERVICE_PORT: 8080
+    ports:
+      - "${OPEN_WEBUI_PORT:-8080}:8080"
+    profiles:
+      - core
+      - ui
+
+  crewai:
+    <<: *nexus-common
+    build: *nexus-stub-build
+    environment:
+      <<: *nexus-common-env
+      NEXUS_SERVICE_NAME: crewai
+      NEXUS_SERVICE_ROLE: Orchestration and delegation placeholder
+      NEXUS_SERVICE_PORT: 8080
+    ports:
+      - "${CREWAI_PORT:-8081}:8080"
+    profiles:
+      - core
+      - orchestration
+
+  openhands:
+    <<: *nexus-common
+    build: *nexus-stub-build
+    environment:
+      <<: *nexus-common-env
+      NEXUS_SERVICE_NAME: openhands
+      NEXUS_SERVICE_ROLE: Engineering subsystem placeholder
+      NEXUS_SERVICE_PORT: 8080
+    ports:
+      - "${OPENHANDS_PORT:-8082}:8080"
+    volumes:
+      - ../../logs:/var/log/nexus
+      - ../../data:/var/lib/nexus/data
+      - ../../memory:/var/lib/nexus/memory
+      - ../../data/workspaces:/workspaces
+      - ../../data/projects:/projects
+    profiles:
+      - core
+      - engineering
+
+  vllm:
+    <<: *nexus-common
+    build: *nexus-stub-build
+    environment:
+      <<: *nexus-common-env
+      NEXUS_SERVICE_NAME: vllm
+      NEXUS_SERVICE_ROLE: Local model serving placeholder
+      NEXUS_SERVICE_PORT: 8080
+      MODEL_ROOT: /models
+    ports:
+      - "${VLLM_PORT:-8083}:8080"
+    volumes:
+      - ../../logs:/var/log/nexus
+      - ../../data:/var/lib/nexus/data
+      - ../../memory:/var/lib/nexus/memory
+      - nexus-model-cache:/models
+    profiles:
+      - core
+      - models
+
+networks:
+  nexus-control-plane:
+    driver: bridge
+
+volumes:
+  nexus-model-cache:
+  nexus-open-webui-state:
+  nexus-crewai-state:
+  nexus-openhands-state:
+  nexus-vllm-state:

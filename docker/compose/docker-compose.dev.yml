@@ -1,0 +1,30 @@
+services:
+  open-webui:
+    restart: unless-stopped
+    environment:
+      NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
+    volumes:
+      - ../../docker/stubs:/app:ro
+
+  crewai:
+    restart: unless-stopped
+    environment:
+      NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
+    volumes:
+      - ../../docker/stubs:/app:ro
+      - ../../docs:/docs:ro
+
+  openhands:
+    restart: unless-stopped
+    environment:
+      NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
+    volumes:
+      - ../../docker/stubs:/app:ro
+      - ../../docs:/docs:ro
+
+  vllm:
+    restart: unless-stopped
+    environment:
+      NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
+    volumes:
+      - ../../docker/stubs:/app:ro

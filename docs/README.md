@@ -13,6 +13,7 @@ Nexus is a local-first, self-hosted, hierarchical multi-agent AI platform. It co
 - [Agent System]({{ site.baseurl }}/docs/agents/overview/) describes supervisor responsibilities, specialized agents, delegation rules, and configuration expectations.
 - [Workflow System]({{ site.baseurl }}/docs/workflows/overview/) explains how Nexus routes tasks through configuration-driven workflows.
 - [Deployment Guide]({{ site.baseurl }}/docs/deployment/overview/) defines the Docker-native deployment model and environment layout.
+- [Development Foundation]({{ site.baseurl }}/docs/deployment/development-foundation/) explains the v0.1 Docker development stack and verification checks.
 - [Operations Guide]({{ site.baseurl }}/docs/operations/overview/) covers observability, artifacts, backups, validation, and maintenance.
 - [Directory Structure]({{ site.baseurl }}/docs/reference/directory-structure/) documents the planned repository layout and placement rules.
 - [Roadmap]({{ site.baseurl }}/docs/roadmap/) defines measurable DevOps and developer milestones for v1.0 and v2.0.
