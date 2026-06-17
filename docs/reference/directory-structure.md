@@ -137,34 +137,12 @@ Nexus/
 │   ├── models/
 │   └── system/
 │
-├── scripts/
-│   ├── install/
-│   ├── bootstrap/
-│   ├── backup/
-│   ├── restore/
-│   └── maintenance/
-│
-├── docs/
-│   ├── README.md
-│   ├── index.md
-│   ├── Gemfile
-│   ├── _config.yml
-│   ├── _includes/
-│   ├── _layouts/
-│   ├── assets/
-│   ├── architecture/
-│   ├── agents/
-│   ├── workflows/
-│   ├── deployment/
-│   ├── operations/
-│   └── reference/
-│
-└── future/
-    ├── desktop-client/
-    ├── mobile-client/
-    ├── api-gateway/
-    ├── distributed-cluster/
-    └── enterprise-features/
+└── scripts/
+    ├── install/
+    ├── bootstrap/
+    ├── backup/
+    ├── restore/
+    └── maintenance/
 ```
 
 ## Directory Responsibilities
@@ -182,8 +160,6 @@ Nexus/
 | `tests/` | Integration, workflow, agent, and regression tests for platform behavior. |
 | `logs/` | Runtime logs for agents, workflows, models, and system services. |
 | `scripts/` | Install, bootstrap, backup, restore, and maintenance automation. |
-| `docs/` | Technical documentation and the Jekyll 3.10 GitHub Pages site source. |
-| `future/` | Planned expansion areas that should not affect the current deployment layout. |
 
 ## Placement Rules
 
