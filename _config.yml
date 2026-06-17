@@ -1,0 +1,25 @@
+title: Nexus Documentation
+description: Technical documentation for the Nexus local-first multi-agent AI platform.
+baseurl: "/Nexus"
+url: "https://shari-ar.github.io"
+repository: shari-ar/Nexus
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - vendor
+  - .bundle
+  - .github
+collections: []
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+  - scope:
+      path: "docs"
+    values:
+      layout: docs

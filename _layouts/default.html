@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+    <meta name="description" content="{{ site.description }}">
+    <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="site-title" href="{{ site.baseurl }}/">{{ site.title }}</a>
+        {% include nav.html %}
+      </div>
+    </header>
+    <main class="container content">
+      {{ content }}
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <span>Local-first multi-agent AI platform documentation.</span>
+      </div>
+    </footer>
+  </body>
+</html>
