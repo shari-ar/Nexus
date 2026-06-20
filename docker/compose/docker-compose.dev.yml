@@ -35,5 +35,7 @@ services:
     restart: unless-stopped
     environment:
       NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
+      VLLM_LOGGING_LEVEL: ${VLLM_LOGGING_LEVEL:-DEBUG}
     volumes:
-      - ../../docker/stubs:/app:ro
+      - ../../configs/models:/configs/models:ro
+      - ../../logs/models:/logs/models

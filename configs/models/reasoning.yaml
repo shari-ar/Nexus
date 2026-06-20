@@ -1,0 +1,19 @@
+id: reasoning
+name: Nexus Reasoning
+capability: reasoning
+provider: vllm
+served_model_name: ${REASONING_MODEL_NAME:-nexus-reasoning}
+model_path: ${REASONING_MODEL_PATH:-Qwen/Qwen2.5-0.5B-Instruct}
+api_base_url: http://vllm:8000/v1
+recommended_settings:
+  temperature: 0.2
+  top_p: 0.95
+  max_tokens: 1024
+operational_requirements:
+  tensor_parallel_size: ${VLLM_TENSOR_PARALLEL_SIZE:-1}
+  minimum_memory: 4 GB GPU VRAM or compatible CPU fallback environment
+  startup_health_endpoint: /health
+  models_endpoint: /v1/models
+verification:
+  command: ./scripts/models/test-vllm-prompt.sh
+  expected_result: Terminal output includes a non-empty assistant response from the configured vLLM model.

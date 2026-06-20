@@ -41,7 +41,7 @@ services:
       ENABLE_SIGNUP: ${OPEN_WEBUI_ENABLE_SIGNUP:-True}
       DEFAULT_USER_ROLE: ${OPEN_WEBUI_DEFAULT_USER_ROLE:-admin}
       ENABLE_OPENAI_API: ${OPEN_WEBUI_ENABLE_OPENAI_API:-True}
-      OPENAI_API_BASE_URLS: ${OPEN_WEBUI_OPENAI_API_BASE_URLS:-http://vllm:8080/v1}
+      OPENAI_API_BASE_URLS: ${OPEN_WEBUI_OPENAI_API_BASE_URLS:-http://vllm:8000/v1}
       OPENAI_API_KEYS: ${OPEN_WEBUI_OPENAI_API_KEYS:-nexus-dev-key}
       ENABLE_OLLAMA_API: ${OPEN_WEBUI_ENABLE_OLLAMA_API:-False}
       ENV: ${NEXUS_ENV:-dev}
@@ -103,21 +103,58 @@ services:
       - engineering
 
   vllm:
-    <<: *nexus-common
-    build: *nexus-stub-build
+    image: ${VLLM_IMAGE:-vllm/vllm-openai-cpu}:${VLLM_IMAGE_TAG:-latest-x86_64}
+    restart: unless-stopped
+    networks:
+      - nexus-control-plane
+    shm_size: ${VLLM_SHM_SIZE:-4g}
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - seccomp=unconfined
     environment:
       <<: *nexus-common-env
       NEXUS_SERVICE_NAME: vllm
-      NEXUS_SERVICE_ROLE: Local model serving placeholder
-      NEXUS_SERVICE_PORT: 8080
-      MODEL_ROOT: /models
+      NEXUS_SERVICE_ROLE: Local language model serving
+      NEXUS_SERVICE_VERSION: v0.3
+      NEXUS_SERVICE_PORT: ${VLLM_CONTAINER_PORT:-8000}
+      HF_HOME: /models/.cache/huggingface
+      HUGGING_FACE_HUB_TOKEN: ${HUGGING_FACE_HUB_TOKEN:-}
+      VLLM_LOGGING_LEVEL: ${VLLM_LOGGING_LEVEL:-INFO}
+      VLLM_NO_USAGE_STATS: ${VLLM_NO_USAGE_STATS:-1}
+      VLLM_CPU_KVCACHE_SPACE: ${VLLM_CPU_KVCACHE_SPACE:-4}
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "${VLLM_CONTAINER_PORT:-8000}"
+      - --model
+      - "${VLLM_MODEL_PATH:-Qwen/Qwen2.5-0.5B-Instruct}"
+      - --served-model-name
+      - "${VLLM_MODEL_NAME:-nexus-local}"
+      - --tensor-parallel-size
+      - "${VLLM_TENSOR_PARALLEL_SIZE:-1}"
+      - --max-model-len
+      - "${VLLM_MAX_MODEL_LEN:-2048}"
+      - --dtype
+      - "${VLLM_DTYPE:-auto}"
+      - --trust-remote-code
     ports:
-      - "${VLLM_PORT:-8083}:8080"
+      - "${VLLM_PORT:-8083}:${VLLM_CONTAINER_PORT:-8000}"
     volumes:
       - ../../logs:/var/log/nexus
-      - ../../data:/var/lib/nexus/data
-      - ../../memory:/var/lib/nexus/memory
       - nexus-model-cache:/models
+      - ../../logs/models:/logs/models
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import os, urllib.request; port = os.environ.get('NEXUS_SERVICE_PORT', '8000'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health', timeout=2).read()"
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
     profiles:
       - core
       - models

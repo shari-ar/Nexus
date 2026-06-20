@@ -1,0 +1,36 @@
+version: 1
+default_profile: reasoning
+profiles:
+  reasoning:
+    file: configs/models/reasoning.yaml
+    capabilities:
+      - planning
+      - analysis
+      - summarization
+      - general_chat
+  coding:
+    file: configs/models/coding.yaml
+    capabilities:
+      - code_generation
+      - code_review
+      - test_generation
+      - debugging
+routing_contract:
+  selector_input:
+    required:
+      - capability
+      - prompt
+    optional:
+      - max_tokens
+      - temperature
+      - profile_override
+  selector_output:
+    required:
+      - profile
+      - served_model_name
+      - api_base_url
+      - request_parameters
+  rules:
+    - when capability is code_generation, code_review, test_generation, or debugging, use the coding profile.
+    - when capability is planning, analysis, summarization, or general_chat, use the reasoning profile.
+    - when no capability matches, use the default_profile.

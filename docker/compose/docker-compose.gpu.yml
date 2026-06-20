@@ -1,0 +1,29 @@
+services:
+  vllm:
+    image: ${VLLM_GPU_IMAGE:-vllm/vllm-openai}:${VLLM_GPU_IMAGE_TAG:-latest}
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "${VLLM_CONTAINER_PORT:-8000}"
+      - --model
+      - "${VLLM_MODEL_PATH:-Qwen/Qwen2.5-0.5B-Instruct}"
+      - --served-model-name
+      - "${VLLM_MODEL_NAME:-nexus-local}"
+      - --tensor-parallel-size
+      - "${VLLM_TENSOR_PARALLEL_SIZE:-1}"
+      - --max-model-len
+      - "${VLLM_MAX_MODEL_LEN:-2048}"
+      - --dtype
+      - "${VLLM_DTYPE:-auto}"
+      - --gpu-memory-utilization
+      - "${VLLM_GPU_MEMORY_UTILIZATION:-0.90}"
+      - --trust-remote-code
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: ${VLLM_GPU_COUNT:-all}
+              capabilities:
+                - gpu

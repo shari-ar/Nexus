@@ -6,6 +6,8 @@ data/**
 !data/.gitkeep
 logs/**
 !logs/.gitkeep
+!logs/models/
+!logs/models/.gitkeep
 memory/**
 !memory/.gitkeep
 models/**
