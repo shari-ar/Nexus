@@ -37,6 +37,12 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if SERVICE_NAME == "vllm" and self.path == "/v1/models":
+            payload = {"object": "list", "data": [{"id": "nexus-dev-placeholder", "object": "model", "owned_by": "nexus"}]}
+            write_log("models_list", path=self.path, status="ok")
+            self._send_json(200, payload)
+            return
+
         if self.path in {"/", "/status", "/health"}:
             payload = {
                 "status": "healthy",
@@ -52,6 +58,36 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         write_log("not_found", path=self.path)
+        self._send_json(404, {"status": "not_found", "service": SERVICE_NAME})
+
+
+    def do_POST(self):
+        if SERVICE_NAME == "vllm" and self.path == "/v1/chat/completions":
+            content_length = int(self.headers.get("Content-Length", "0"))
+            if content_length:
+                self.rfile.read(content_length)
+            payload = {
+                "id": "chatcmpl-nexus-dev",
+                "object": "chat.completion",
+                "created": int(time.time()),
+                "model": "nexus-dev-placeholder",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "Nexus development mode is running. Open WebUI is connected to the local placeholder model endpoint.",
+                        },
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            }
+            write_log("chat_completion", path=self.path, status="ok")
+            self._send_json(200, payload)
+            return
+
+        write_log("post_not_found", path=self.path)
         self._send_json(404, {"status": "not_found", "service": SERVICE_NAME})
 
     def log_message(self, format, *args):

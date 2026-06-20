@@ -31,15 +31,39 @@ x-nexus-common: &nexus-common
 
 services:
   open-webui:
-    <<: *nexus-common
-    build: *nexus-stub-build
+    image: ghcr.io/open-webui/open-webui:${OPEN_WEBUI_IMAGE_TAG:-main}
+    restart: unless-stopped
+    networks:
+      - nexus-control-plane
     environment:
-      <<: *nexus-common-env
-      NEXUS_SERVICE_NAME: open-webui
-      NEXUS_SERVICE_ROLE: Primary user interface placeholder
-      NEXUS_SERVICE_PORT: 8080
+      WEBUI_NAME: ${OPEN_WEBUI_NAME:-Nexus}
+      WEBUI_AUTH: ${OPEN_WEBUI_AUTH:-False}
+      ENABLE_SIGNUP: ${OPEN_WEBUI_ENABLE_SIGNUP:-True}
+      DEFAULT_USER_ROLE: ${OPEN_WEBUI_DEFAULT_USER_ROLE:-admin}
+      ENABLE_OPENAI_API: ${OPEN_WEBUI_ENABLE_OPENAI_API:-True}
+      OPENAI_API_BASE_URLS: ${OPEN_WEBUI_OPENAI_API_BASE_URLS:-http://vllm:8080/v1}
+      OPENAI_API_KEYS: ${OPEN_WEBUI_OPENAI_API_KEYS:-nexus-dev-key}
+      ENABLE_OLLAMA_API: ${OPEN_WEBUI_ENABLE_OLLAMA_API:-False}
+      ENV: ${NEXUS_ENV:-dev}
+      ENABLE_PERSISTENT_CONFIG: ${OPEN_WEBUI_ENABLE_PERSISTENT_CONFIG:-False}
+      OFFLINE_MODE: ${OPEN_WEBUI_OFFLINE_MODE:-True}
+      HF_HUB_OFFLINE: ${OPEN_WEBUI_HF_HUB_OFFLINE:-1}
+      ENABLE_VERSION_UPDATE_CHECK: ${OPEN_WEBUI_ENABLE_VERSION_UPDATE_CHECK:-False}
     ports:
       - "${OPEN_WEBUI_PORT:-8080}:8080"
+    volumes:
+      - nexus-open-webui-state:/app/backend/data
+      - ../../logs/open-webui:/var/log/open-webui
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2).read()"
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     profiles:
       - core
       - ui

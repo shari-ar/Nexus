@@ -2,9 +2,18 @@ services:
   open-webui:
     restart: unless-stopped
     environment:
-      NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
+      WEBUI_NAME: ${OPEN_WEBUI_NAME:-Nexus Dev}
+      WEBUI_AUTH: ${OPEN_WEBUI_AUTH:-False}
+      ENABLE_SIGNUP: ${OPEN_WEBUI_ENABLE_SIGNUP:-True}
+      DEFAULT_USER_ROLE: ${OPEN_WEBUI_DEFAULT_USER_ROLE:-admin}
+      GLOBAL_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-DEBUG}
+      ENABLE_PERSISTENT_CONFIG: ${OPEN_WEBUI_ENABLE_PERSISTENT_CONFIG:-False}
+      OFFLINE_MODE: ${OPEN_WEBUI_OFFLINE_MODE:-True}
+      HF_HUB_OFFLINE: ${OPEN_WEBUI_HF_HUB_OFFLINE:-1}
+      ENABLE_VERSION_UPDATE_CHECK: ${OPEN_WEBUI_ENABLE_VERSION_UPDATE_CHECK:-False}
     volumes:
-      - ../../docker/stubs:/app:ro
+      - nexus-open-webui-state:/app/backend/data
+      - ../../logs/open-webui:/var/log/open-webui
 
   crewai:
     restart: unless-stopped
