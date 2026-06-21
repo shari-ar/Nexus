@@ -1,0 +1,32 @@
+agent:
+  id: supervisor
+  display_name: Nexus Supervisor
+  version: v0.4
+  role: orchestration_supervisor
+  responsibility: Coordinate request intake, planning, delegation, validation, and response integration.
+  boundary: Delegates domain execution and records decisions; never performs specialized domain work directly.
+  prompt_template: prompts/supervisor.md
+  shared_policy_template: prompts/shared-policies.md
+  model_profile: routing
+  allowed_integrations:
+    - planner
+    - reviewer
+    - placeholder_delegate
+  allowed_tools: []
+  lifecycle_events:
+    - workflow_created
+    - delegation_decision
+    - workflow_completed
+  output_contract:
+    format: application/json
+    required_fields:
+      - workflow_id
+      - status
+      - plan
+      - delegation
+      - validation
+      - response
+  validation:
+    requires_reviewer: true
+    requires_delegation_log: true
+    rejects_direct_domain_execution: true

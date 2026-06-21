@@ -1,0 +1,19 @@
+agent:
+  id: planner
+  display_name: Nexus Planner
+  version: v0.4
+  role: task_planner
+  responsibility: Convert a user request into observable steps, dependencies, and acceptance criteria.
+  boundary: Produces plans only; does not execute delegated tasks.
+  prompt_template: prompts/planner.md
+  shared_policy_template: prompts/shared-policies.md
+  model_profile: reasoning
+  allowed_tools: []
+  lifecycle_events:
+    - plan_created
+  output_contract:
+    format: application/json
+    required_fields:
+      - steps
+      - acceptance_criteria
+      - measurable_outcome

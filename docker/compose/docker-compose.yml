@@ -70,14 +70,28 @@ services:
 
   crewai:
     <<: *nexus-common
-    build: *nexus-stub-build
+    build:
+      context: ../..
+      dockerfile: docker/crewai/Dockerfile
     environment:
       <<: *nexus-common-env
       NEXUS_SERVICE_NAME: crewai
-      NEXUS_SERVICE_ROLE: Orchestration and delegation placeholder
+      NEXUS_SERVICE_ROLE: Orchestration runtime
+      NEXUS_SERVICE_VERSION: v0.4
       NEXUS_SERVICE_PORT: 8080
+      NEXUS_CONFIG_DIR: /app/configs
+      NEXUS_PROMPT_DIR: /app/prompts
+      NEXUS_WORKFLOW_LOG_DIR: /var/log/nexus/workflows
+      NEXUS_AGENT_LOG_DIR: /var/log/nexus/agents
+      NEXUS_WORKSPACE_DIR: /workspaces
     ports:
       - "${CREWAI_PORT:-8081}:8080"
+    volumes:
+      - ../../configs:/app/configs:ro
+      - ../../prompts:/app/prompts:ro
+      - ../../orchestration:/app/orchestration:ro
+      - ../../logs:/var/log/nexus
+      - ../../data/workspaces:/workspaces
     profiles:
       - core
       - orchestration

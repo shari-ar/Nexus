@@ -20,7 +20,11 @@ services:
     environment:
       NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
     volumes:
-      - ../../docker/stubs:/app:ro
+      - ../../configs:/app/configs:ro
+      - ../../prompts:/app/prompts:ro
+      - ../../orchestration:/app/orchestration:ro
+      - ../../logs:/var/log/nexus
+      - ../../data/workspaces:/workspaces
       - ../../docs:/docs:ro
 
   openhands:

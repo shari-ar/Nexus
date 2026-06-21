@@ -4,10 +4,16 @@
 # Nexus runtime data
 data/**
 !data/.gitkeep
+!data/workspaces/
+!data/workspaces/.gitkeep
 logs/**
 !logs/.gitkeep
+!logs/agents/
+!logs/agents/.gitkeep
 !logs/models/
 !logs/models/.gitkeep
+!logs/workflows/
+!logs/workflows/.gitkeep
 memory/**
 !memory/.gitkeep
 models/**
