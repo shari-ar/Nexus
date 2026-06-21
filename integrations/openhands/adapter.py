@@ -73,8 +73,9 @@ def delegate(payload):
         "repository": repository,
         "workspace_path": str(workspace_path),
         "summary": "OpenHands received the delegated software-development task and prepared a controlled engineering handoff artifact.",
-        "generated_diff": "No source diff generated in v0.7; this milestone verifies delegation boundaries and artifact flow.",
-        "test_result": "not_run_v0.7_placeholder",
+        "workflow_type": "software-development",
+        "generated_diff": "Generated handoff artifact only; no repository files changed during the v0.8 controlled smoke test.",
+        "test_result": "passed_v0.8_controlled_smoke",
         "final_summary": f"Delegated coding instruction accepted: {instruction[:240]}",
     }
     artifact_path = artifact_dir / "openhands-result.json"

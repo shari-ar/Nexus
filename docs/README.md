@@ -19,6 +19,7 @@ Nexus is a local-first, self-hosted, hierarchical multi-agent AI platform. It co
 - [Open WebUI to CrewAI Request Flow]({{ site.baseurl }}/docs/deployment/open-webui-crewai-request-flow/) documents the v0.5 UI-to-orchestration adapter, smoke prompt, and correlated log checks.
 - [Agent Configuration and Permission Boundaries]({{ site.baseurl }}/docs/deployment/agent-configuration-permissions/) documents the v0.6 YAML agents, permission policies, contracts, and validation checks.
 - [OpenHands Engineering Subsystem]({{ site.baseurl }}/docs/deployment/openhands-engineering-subsystem/) documents the v0.7 engineering delegation service, workspace boundaries, contracts, and smoke tests.
+- [Software Development Workflow]({{ site.baseurl }}/docs/deployment/software-development-workflow/) documents the v0.8 configured coding workflow, log aggregation, fixture smoke test, and reviewer checks.
 - [Operations Guide]({{ site.baseurl }}/docs/operations/overview/) covers observability, artifacts, backups, validation, and maintenance.
 - [Directory Structure]({{ site.baseurl }}/docs/reference/directory-structure/) documents the planned repository layout and placement rules.
 - [Roadmap]({{ site.baseurl }}/docs/roadmap/) defines measurable DevOps and developer milestones for v1.0 and v2.0.

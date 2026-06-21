@@ -15,14 +15,16 @@ SERVICE_PORT = int(os.getenv("NEXUS_SERVICE_PORT", "8080"))
 NEXUS_ENV = os.getenv("NEXUS_ENV", "development")
 CONFIG_DIR = Path(os.getenv("NEXUS_CONFIG_DIR", "/app/configs"))
 PROMPT_DIR = Path(os.getenv("NEXUS_PROMPT_DIR", "/app/prompts"))
+WORKFLOW_CONFIG_DIR = Path(os.getenv("NEXUS_WORKFLOW_CONFIG_DIR", "/app/configs/workflows"))
 WORKFLOW_LOG_DIR = Path(os.getenv("NEXUS_WORKFLOW_LOG_DIR", "/var/log/nexus/workflows"))
+WORKFLOW_AGGREGATE_DIR = Path(os.getenv("NEXUS_WORKFLOW_AGGREGATE_DIR", "/var/log/nexus/workflows/aggregate"))
 AGENT_LOG_DIR = Path(os.getenv("NEXUS_AGENT_LOG_DIR", "/var/log/nexus/agents"))
 WORKSPACE_DIR = Path(os.getenv("NEXUS_WORKSPACE_DIR", "/workspaces"))
 OPENHANDS_URL = os.getenv("OPENHANDS_INTERNAL_URL", "http://openhands:8080").rstrip("/")
 OPENHANDS_TIMEOUT_SECONDS = float(os.getenv("OPENHANDS_TIMEOUT_SECONDS", "30"))
 STARTED_AT = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-for runtime_dir in (WORKFLOW_LOG_DIR, AGENT_LOG_DIR, WORKSPACE_DIR):
+for runtime_dir in (WORKFLOW_LOG_DIR, WORKFLOW_AGGREGATE_DIR, AGENT_LOG_DIR, WORKSPACE_DIR):
     runtime_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -54,6 +56,24 @@ def load_agent_config(agent_id):
 
 def load_core_agent_configs():
     return {agent_id: load_agent_config(agent_id) for agent_id in ["supervisor", "planner", "reviewer", "coding"]}
+
+
+def load_workflow_config(workflow_id):
+    config_path = WORKFLOW_CONFIG_DIR / f"{workflow_id}.yaml"
+    if not config_path.exists():
+        return {"id": workflow_id, "config_path": str(config_path), "loaded": False}
+    stage_ids = []
+    for line in config_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("id:") and not stage_ids:
+            continue
+        if stripped.startswith("- id:"):
+            stage_ids.append(stripped.split(":", 1)[1].strip())
+    return {"id": workflow_id, "config_path": str(config_path), "loaded": True, "stages": stage_ids}
+
+
+def log_workflow_aggregate(workflow_type, payload):
+    write_jsonl(WORKFLOW_AGGREGATE_DIR / f"{workflow_type}.jsonl", payload)
 
 def utc_timestamp():
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -118,7 +138,16 @@ def delegate_to_openhands(workflow_id, request_summary):
     with request.urlopen(openhands_request, timeout=OPENHANDS_TIMEOUT_SECONDS) as response:
         return json.loads(response.read().decode("utf-8"))
 
-def build_plan():
+def build_plan(workflow_type="general"):
+    if workflow_type == "software-development":
+        return [
+            {"step": 1, "stage": "intake", "owner": "supervisor", "action": "Accept and classify the software-development request.", "observable_result": "Workflow logs include workflow_created and workflow_selected."},
+            {"step": 2, "stage": "planning", "owner": "planner", "action": "Create implementation plan and acceptance criteria.", "observable_result": "Workflow logs include plan_created with ordered stages."},
+            {"step": 3, "stage": "routing", "owner": "supervisor", "action": "Route coding execution to OpenHands.", "observable_result": "Workflow logs include delegation_decision delegated_to openhands."},
+            {"step": 4, "stage": "execution", "owner": "coding", "action": "Receive OpenHands engineering result artifact.", "observable_result": "data/generated/code contains an OpenHands result artifact."},
+            {"step": 5, "stage": "review", "owner": "reviewer", "action": "Validate diff, test result, final summary, and artifact path.", "observable_result": "validation_completed includes software-development checks."},
+            {"step": 6, "stage": "integration", "owner": "supervisor", "action": "Return final software-development workflow summary.", "observable_result": "Final response summarizes the delegated engineering result."},
+        ]
     return [
         {
             "step": 1,
@@ -179,20 +208,30 @@ def orchestrate(request_text, source="direct", request_id=None):
         request_summary = "Run the Nexus v0.4 orchestration smoke test."
 
     selected_agents = load_core_agent_configs()
-    log_workflow(workflow_id, "workflow_created", request=request_summary, environment=NEXUS_ENV, source=source, request_id=request_id, selected_agents=selected_agents)
+    workflow_type = "software-development" if is_coding_request(request_summary) else "general"
+    workflow_config = load_workflow_config("software-development") if workflow_type == "software-development" else {"id": "general", "loaded": False}
+    log_workflow(workflow_id, "workflow_created", request=request_summary, environment=NEXUS_ENV, source=source, request_id=request_id, selected_agents=selected_agents, workflow_type=workflow_type, workflow_config=workflow_config)
+    if workflow_type == "software-development":
+        log_workflow(workflow_id, "workflow_selected", workflow_type=workflow_type, workflow_config=workflow_config)
     log_agent("supervisor", "intake_received", workflow_id, request=request_summary, source=source, request_id=request_id, config=selected_agents["supervisor"])
 
-    plan = build_plan()
+    plan = build_plan(workflow_type)
     acceptance_criteria = [
         "A workflow ID is returned to the caller.",
         "Workflow logs include created, planned, delegated, validated, and completed events.",
         "Agent logs include supervisor, planner, and reviewer events.",
         "The supervisor records delegation instead of executing the domain task directly.",
     ]
+    if workflow_type == "software-development":
+        acceptance_criteria.extend([
+            "OpenHands receives the delegated coding task.",
+            "Generated code artifacts are written under data/generated/code.",
+            "Reviewer checks generated diff, test result, final summary, and artifact path.",
+        ])
     log_workflow(workflow_id, "plan_created", plan=plan, acceptance_criteria=acceptance_criteria)
     log_agent("planner", "plan_created", workflow_id, steps=len(plan), acceptance_criteria=acceptance_criteria, config=selected_agents["planner"])
 
-    if is_coding_request(request_summary):
+    if workflow_type == "software-development":
         delegation = {
             "delegated_by": "supervisor",
             "delegated_to": "openhands",
@@ -235,6 +274,9 @@ def orchestrate(request_text, source="direct", request_id=None):
             "supervisor_direct_domain_execution": False,
             "response_ready": placeholder_result.get("status") == "completed",
             "code_result_has_artifact": bool(placeholder_result.get("artifact_path")) if delegation["delegated_to"] == "openhands" else True,
+            "code_result_has_generated_diff": bool(placeholder_result.get("generated_diff")) if delegation["delegated_to"] == "openhands" else True,
+            "code_result_has_test_result": bool(placeholder_result.get("test_result")) if delegation["delegated_to"] == "openhands" else True,
+            "code_result_has_final_summary": bool(placeholder_result.get("final_summary")) if delegation["delegated_to"] == "openhands" else True,
         },
         "findings": [] if placeholder_result.get("status") == "completed" else [placeholder_result.get("message", "Delegated task failed.")],
     }
@@ -254,7 +296,9 @@ def orchestrate(request_text, source="direct", request_id=None):
             "workspace_artifact": placeholder_result.get("artifact_path"),
         },
     }
-    log_workflow(workflow_id, "workflow_completed", status="completed", response=response)
+    log_workflow(workflow_id, "workflow_completed", status="completed", response=response, workflow_type=workflow_type)
+    if workflow_type == "software-development":
+        log_workflow_aggregate(workflow_type, {"timestamp": utc_timestamp(), "service": SERVICE_NAME, "workflow_id": workflow_id, "workflow_type": workflow_type, "status": "completed", "artifact_path": placeholder_result.get("artifact_path"), "validation": validation})
     log_agent("supervisor", "workflow_completed", workflow_id, status="completed")
 
     return {
@@ -265,6 +309,8 @@ def orchestrate(request_text, source="direct", request_id=None):
         "request_id": request_id,
         "plan": plan,
         "acceptance_criteria": acceptance_criteria,
+        "workflow_type": workflow_type,
+        "workflow_config": workflow_config,
         "delegation": delegation,
         "delegated_result": placeholder_result,
         "validation": validation,

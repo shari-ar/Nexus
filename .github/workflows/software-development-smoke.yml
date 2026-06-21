@@ -1,0 +1,40 @@
+name: Software Development Workflow Smoke Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "configs/workflows/**"
+      - "integrations/openhands/**"
+      - "orchestration/crewai/**"
+      - "orchestration/shared/contracts/**"
+      - "scripts/ci/smoke-software-development-workflow.py"
+      - ".github/workflows/software-development-smoke.yml"
+  pull_request:
+    paths:
+      - "configs/workflows/**"
+      - "integrations/openhands/**"
+      - "orchestration/crewai/**"
+      - "orchestration/shared/contracts/**"
+      - "scripts/ci/smoke-software-development-workflow.py"
+      - ".github/workflows/software-development-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  software-development-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run software-development workflow smoke test
+        run: python3 scripts/ci/smoke-software-development-workflow.py

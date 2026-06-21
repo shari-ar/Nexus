@@ -14,6 +14,7 @@ MODELS_DIR = ROOT_DIR / "configs" / "models"
 PROMPTS_DIR = ROOT_DIR / "prompts"
 CONTRACTS_DIR = ROOT_DIR / "orchestration" / "shared" / "contracts"
 PERMISSIONS_FILE = ROOT_DIR / "configs" / "system" / "permissions.yaml"
+WORKFLOWS_DIR = ROOT_DIR / "configs" / "workflows"
 REQUIRED_AGENTS = ["supervisor", "planner", "reviewer", "coding", "documentation", "devops"]
 REQUIRED_AGENT_FIELDS = [
     "id",
@@ -109,6 +110,33 @@ def validate_json_schema_file(path):
     return True
 
 
+
+def validate_workflow_configs(agent_ids):
+    valid = True
+    required_workflow = WORKFLOWS_DIR / "software-development.yaml"
+    if not required_workflow.exists():
+        return fail(f"missing required workflow config {required_workflow}")
+    try:
+        config = load_yaml(required_workflow)
+    except Exception as exc:
+        return fail(f"{required_workflow}: cannot parse YAML: {exc}")
+    workflow = config.get("workflow", {})
+    if workflow.get("id") != "software-development":
+        valid = fail(f"{required_workflow}: workflow.id must be software-development") and valid
+    for agent_id in workflow.get("required_agents", []):
+        if agent_id not in agent_ids:
+            valid = fail(f"{required_workflow}: unknown required agent '{agent_id}'") and valid
+    stage_ids = [stage.get("id") for stage in workflow.get("stages", []) if isinstance(stage, dict)]
+    for required_stage in ["intake", "classification", "planning", "routing", "execution", "review", "integration"]:
+        if required_stage not in stage_ids:
+            valid = fail(f"{required_workflow}: missing workflow stage '{required_stage}'") and valid
+    for checkpoint in ["code_result_has_artifact", "code_result_has_generated_diff", "code_result_has_test_result", "code_result_has_final_summary"]:
+        if checkpoint not in workflow.get("validation_checkpoints", []):
+            valid = fail(f"{required_workflow}: missing validation checkpoint '{checkpoint}'") and valid
+    if valid:
+        print(f"valid: software-development -> {required_workflow}")
+    return valid
+
 def main():
     valid = True
     if not PERMISSIONS_FILE.exists():
@@ -161,6 +189,8 @@ def main():
             if schema_path and Path(schema_path).name not in contract_files:
                 valid = fail(f"{config_path}: {contract_section}.schema does not exist: {schema_path}") and valid
         print(f"valid: {agent_id} -> {config_path}")
+
+    valid = validate_workflow_configs(set(REQUIRED_AGENTS)) and valid
 
     return 0 if valid else 1
 

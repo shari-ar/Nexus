@@ -1,0 +1,14 @@
+version: v0.8
+policies:
+  generated_code_default:
+    path: data/generated/code
+    retention_days: 14
+    minimum_records_to_keep: 20
+    cleanup_mode: manual
+    description: Retain generated code artifacts long enough for local review while keeping cleanup operator-controlled.
+  workflow_logs_default:
+    path: logs/workflows
+    retention_days: 30
+    minimum_records_to_keep: 50
+    cleanup_mode: manual
+    description: Retain workflow logs for milestone verification and troubleshooting.

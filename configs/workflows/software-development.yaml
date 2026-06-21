@@ -1,0 +1,69 @@
+workflow:
+  id: software-development
+  version: v0.8
+  display_name: Software Development Workflow
+  purpose: Plan, delegate, review, and summarize software-development tasks through the coding agent and OpenHands subsystem.
+  request_classification:
+    match_keywords:
+      - code
+      - coding
+      - software
+      - repository
+      - repo
+      - bug
+      - test
+      - implement
+      - debug
+      - refactor
+  required_agents:
+    - supervisor
+    - planner
+    - coding
+    - reviewer
+  required_integrations:
+    - openhands
+  artifact_policy:
+    generated_code_root: data/generated/code
+    workspace_root: data/workspaces/openhands
+    retention_policy: generated_code_default
+  stages:
+    - id: intake
+      owner: supervisor
+      observable_event: workflow_created
+      completion_criteria: User request is accepted and workflow ID is created.
+    - id: classification
+      owner: supervisor
+      observable_event: workflow_selected
+      completion_criteria: Request is classified as software-development.
+    - id: planning
+      owner: planner
+      observable_event: plan_created
+      completion_criteria: Ordered plan and acceptance criteria are logged.
+    - id: routing
+      owner: supervisor
+      observable_event: delegation_decision
+      completion_criteria: Coding task is delegated to OpenHands rather than executed by the supervisor.
+    - id: execution
+      owner: coding
+      integration: openhands
+      observable_event: openhands_task_completed
+      completion_criteria: OpenHands returns generated diff, test result, final summary, and artifact path.
+    - id: review
+      owner: reviewer
+      observable_event: validation_completed
+      completion_criteria: Reviewer validates diff presence, test output, final summary, and artifact path.
+    - id: integration
+      owner: supervisor
+      observable_event: workflow_completed
+      completion_criteria: Final response summarizes the delegated engineering result.
+  validation_checkpoints:
+    - delegation_logged
+    - supervisor_direct_domain_execution
+    - code_result_has_artifact
+    - code_result_has_generated_diff
+    - code_result_has_test_result
+    - code_result_has_final_summary
+  smoke_test:
+    fixture_project: fixtures/software-development/sample-python
+    prompt: Implement a small code change for the Nexus software-development workflow smoke test.
+    expected_artifact: data/generated/code/<workflow-id>/openhands-result.json
