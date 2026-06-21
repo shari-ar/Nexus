@@ -16,6 +16,7 @@ Nexus is a local-first, self-hosted, hierarchical multi-agent AI platform. It co
 - [Development Foundation]({{ site.baseurl }}/docs/deployment/development-foundation/) explains the v0.1 Docker development stack and verification checks.
 - [Open WebUI Entry Point]({{ site.baseurl }}/docs/deployment/open-webui-entrypoint/) documents the v0.2 browser UI milestone and verification checks.
 - [CrewAI Orchestration Runtime]({{ site.baseurl }}/docs/deployment/crewai-orchestration-runtime/) documents the v0.4 orchestration runtime, sample request, and log verification checks.
+- [Open WebUI to CrewAI Request Flow]({{ site.baseurl }}/docs/deployment/open-webui-crewai-request-flow/) documents the v0.5 UI-to-orchestration adapter, smoke prompt, and correlated log checks.
 - [Operations Guide]({{ site.baseurl }}/docs/operations/overview/) covers observability, artifacts, backups, validation, and maintenance.
 - [Directory Structure]({{ site.baseurl }}/docs/reference/directory-structure/) documents the planned repository layout and placement rules.
 - [Roadmap]({{ site.baseurl }}/docs/roadmap/) defines measurable DevOps and developer milestones for v1.0 and v2.0.

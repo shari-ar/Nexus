@@ -12,6 +12,8 @@ logs/**
 !logs/agents/.gitkeep
 !logs/models/
 !logs/models/.gitkeep
+!logs/system/
+!logs/system/.gitkeep
 !logs/workflows/
 !logs/workflows/.gitkeep
 memory/**

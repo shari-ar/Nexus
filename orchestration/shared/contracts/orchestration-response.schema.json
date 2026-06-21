@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.local/contracts/orchestration-response.schema.json",
+  "title": "Nexus Orchestration Response",
+  "type": "object",
+  "required": ["workflow_id", "status", "response"],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "CrewAI workflow identifier used for logs and artifacts."
+    },
+    "status": {
+      "type": "string",
+      "description": "Final orchestration status."
+    },
+    "response": {
+      "type": "object",
+      "description": "User-visible orchestration summary and verification paths."
+    },
+    "validation": {
+      "type": "object",
+      "description": "Reviewer validation result."
+    }
+  },
+  "additionalProperties": true
+}

@@ -41,7 +41,7 @@ services:
       ENABLE_SIGNUP: ${OPEN_WEBUI_ENABLE_SIGNUP:-True}
       DEFAULT_USER_ROLE: ${OPEN_WEBUI_DEFAULT_USER_ROLE:-admin}
       ENABLE_OPENAI_API: ${OPEN_WEBUI_ENABLE_OPENAI_API:-True}
-      OPENAI_API_BASE_URLS: ${OPEN_WEBUI_OPENAI_API_BASE_URLS:-http://vllm:8000/v1}
+      OPENAI_API_BASE_URLS: ${OPEN_WEBUI_OPENAI_API_BASE_URLS:-http://open-webui-adapter:8080/v1}
       OPENAI_API_KEYS: ${OPEN_WEBUI_OPENAI_API_KEYS:-nexus-dev-key}
       ENABLE_OLLAMA_API: ${OPEN_WEBUI_ENABLE_OLLAMA_API:-False}
       ENV: ${NEXUS_ENV:-dev}
@@ -95,6 +95,45 @@ services:
     profiles:
       - core
       - orchestration
+
+  open-webui-adapter:
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: docker/open-webui-adapter/Dockerfile
+    networks:
+      - nexus-control-plane
+    environment:
+      <<: *nexus-common-env
+      NEXUS_SERVICE_NAME: open-webui-adapter
+      NEXUS_SERVICE_ROLE: Open WebUI to CrewAI adapter
+      NEXUS_SERVICE_VERSION: v0.5
+      NEXUS_SERVICE_PORT: 8080
+      NEXUS_SYSTEM_LOG_DIR: /var/log/nexus/system
+      CREWAI_INTERNAL_URL: ${CREWAI_INTERNAL_URL:-http://crewai:8080}
+      CREWAI_TIMEOUT_SECONDS: ${CREWAI_TIMEOUT_SECONDS:-30}
+      OPEN_WEBUI_ADAPTER_MODEL_ID: ${OPEN_WEBUI_ADAPTER_MODEL_ID:-nexus-crewai}
+    ports:
+      - "${OPEN_WEBUI_ADAPTER_PORT:-8084}:8080"
+    volumes:
+      - ../../logs:/var/log/nexus
+    depends_on:
+      crewai:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3).read()"
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 15s
+    profiles:
+      - core
+      - orchestration
+      - ui
 
   openhands:
     <<: *nexus-common

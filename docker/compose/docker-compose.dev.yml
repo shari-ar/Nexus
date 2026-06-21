@@ -11,9 +11,19 @@ services:
       OFFLINE_MODE: ${OPEN_WEBUI_OFFLINE_MODE:-True}
       HF_HUB_OFFLINE: ${OPEN_WEBUI_HF_HUB_OFFLINE:-1}
       ENABLE_VERSION_UPDATE_CHECK: ${OPEN_WEBUI_ENABLE_VERSION_UPDATE_CHECK:-False}
+      OPENAI_API_BASE_URLS: ${OPEN_WEBUI_OPENAI_API_BASE_URLS:-http://open-webui-adapter:8080/v1}
     volumes:
       - nexus-open-webui-state:/app/backend/data
       - ../../logs/open-webui:/var/log/open-webui
+
+  open-webui-adapter:
+    restart: unless-stopped
+    environment:
+      NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
+    volumes:
+      - ../../integrations:/app/integrations:ro
+      - ../../logs:/var/log/nexus
+      - ../../docs:/docs:ro
 
   crewai:
     restart: unless-stopped

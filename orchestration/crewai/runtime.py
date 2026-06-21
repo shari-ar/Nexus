@@ -114,14 +114,14 @@ def create_placeholder_artifact(workflow_id, request_summary):
     return artifact
 
 
-def orchestrate(request_text):
+def orchestrate(request_text, source="direct", request_id=None):
     workflow_id = f"wf-{uuid.uuid4().hex[:12]}"
     request_summary = " ".join(request_text.strip().split())[:500]
     if not request_summary:
         request_summary = "Run the Nexus v0.4 orchestration smoke test."
 
-    log_workflow(workflow_id, "workflow_created", request=request_summary, environment=NEXUS_ENV)
-    log_agent("supervisor", "intake_received", workflow_id, request=request_summary)
+    log_workflow(workflow_id, "workflow_created", request=request_summary, environment=NEXUS_ENV, source=source, request_id=request_id)
+    log_agent("supervisor", "intake_received", workflow_id, request=request_summary, source=source, request_id=request_id)
 
     plan = build_plan()
     acceptance_criteria = [
@@ -184,6 +184,8 @@ def orchestrate(request_text):
         "workflow_id": workflow_id,
         "status": "completed",
         "request": request_summary,
+        "source": source,
+        "request_id": request_id,
         "plan": plan,
         "acceptance_criteria": acceptance_criteria,
         "delegation": delegation,
@@ -239,7 +241,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             payload = self.read_json()
-            result = orchestrate(payload.get("request", ""))
+            result = orchestrate(payload.get("request", ""), payload.get("source", "direct"), payload.get("request_id") or self.headers.get("X-Nexus-Request-ID"))
             self.send_json(200, result)
         except json.JSONDecodeError:
             self.send_json(400, {"status": "invalid_json", "message": "Request body must be valid JSON."})
