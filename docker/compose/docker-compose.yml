@@ -158,21 +158,39 @@ services:
       - validation
 
   openhands:
-    <<: *nexus-common
-    build: *nexus-stub-build
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: docker/openhands-adapter/Dockerfile
+    networks:
+      - nexus-control-plane
     environment:
       <<: *nexus-common-env
       NEXUS_SERVICE_NAME: openhands
-      NEXUS_SERVICE_ROLE: Engineering subsystem placeholder
+      NEXUS_SERVICE_ROLE: OpenHands engineering subsystem adapter
+      NEXUS_SERVICE_VERSION: v0.7
       NEXUS_SERVICE_PORT: 8080
+      NEXUS_AGENT_LOG_DIR: /var/log/nexus/agents
+      OPENHANDS_WORKSPACE_ROOT: /workspaces
+      OPENHANDS_PROJECTS_ROOT: /projects
+      OPENHANDS_GENERATED_CODE_ROOT: /generated/code
     ports:
       - "${OPENHANDS_PORT:-8082}:8080"
     volumes:
       - ../../logs:/var/log/nexus
-      - ../../data:/var/lib/nexus/data
-      - ../../memory:/var/lib/nexus/memory
-      - ../../data/workspaces:/workspaces
-      - ../../data/projects:/projects
+      - ../../data/workspaces/openhands:/workspaces
+      - ../../data/projects:/projects:ro
+      - ../../data/generated/code:/generated/code
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2).read()"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     profiles:
       - core
       - engineering

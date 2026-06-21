@@ -5,6 +5,7 @@ import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib import error, request
 from urllib.parse import urlparse
 
 SERVICE_NAME = os.getenv("NEXUS_SERVICE_NAME", "crewai")
@@ -17,6 +18,8 @@ PROMPT_DIR = Path(os.getenv("NEXUS_PROMPT_DIR", "/app/prompts"))
 WORKFLOW_LOG_DIR = Path(os.getenv("NEXUS_WORKFLOW_LOG_DIR", "/var/log/nexus/workflows"))
 AGENT_LOG_DIR = Path(os.getenv("NEXUS_AGENT_LOG_DIR", "/var/log/nexus/agents"))
 WORKSPACE_DIR = Path(os.getenv("NEXUS_WORKSPACE_DIR", "/workspaces"))
+OPENHANDS_URL = os.getenv("OPENHANDS_INTERNAL_URL", "http://openhands:8080").rstrip("/")
+OPENHANDS_TIMEOUT_SECONDS = float(os.getenv("OPENHANDS_TIMEOUT_SECONDS", "30"))
 STARTED_AT = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 for runtime_dir in (WORKFLOW_LOG_DIR, AGENT_LOG_DIR, WORKSPACE_DIR):
@@ -50,7 +53,7 @@ def load_agent_config(agent_id):
 
 
 def load_core_agent_configs():
-    return {agent_id: load_agent_config(agent_id) for agent_id in ["supervisor", "planner", "reviewer"]}
+    return {agent_id: load_agent_config(agent_id) for agent_id in ["supervisor", "planner", "reviewer", "coding"]}
 
 def utc_timestamp():
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -89,6 +92,32 @@ def log_agent(agent_id, event, workflow_id, **fields):
     )
 
 
+
+def is_coding_request(request_summary):
+    lowered = request_summary.lower()
+    markers = ["code", "coding", "software", "repository", "repo", "bug", "test", "implement", "debug", "refactor"]
+    return any(marker in lowered for marker in markers)
+
+
+def delegate_to_openhands(workflow_id, request_summary):
+    task_id = f"coding-{uuid.uuid4().hex[:8]}"
+    payload = {
+        "workflow_id": workflow_id,
+        "task_id": task_id,
+        "instruction": request_summary,
+        "workspace": workflow_id,
+        "repository": {"repository_path": "/projects", "workspace": workflow_id},
+    }
+    body = json.dumps(payload).encode("utf-8")
+    openhands_request = request.Request(
+        f"{OPENHANDS_URL}/delegate",
+        data=body,
+        headers={"Content-Type": "application/json", "X-Nexus-Workflow-ID": workflow_id},
+        method="POST",
+    )
+    with request.urlopen(openhands_request, timeout=OPENHANDS_TIMEOUT_SECONDS) as response:
+        return json.loads(response.read().decode("utf-8"))
+
 def build_plan():
     return [
         {
@@ -108,8 +137,8 @@ def build_plan():
         {
             "step": 3,
             "stage": "delegate",
-            "owner": "placeholder_delegate",
-            "action": "Complete a placeholder delegated task for v0.4 runtime verification.",
+            "owner": "selected_delegate",
+            "action": "Complete the selected delegated task through a placeholder or OpenHands route.",
             "observable_result": "The response includes delegated task status and a workspace artifact path.",
         },
         {
@@ -163,48 +192,66 @@ def orchestrate(request_text, source="direct", request_id=None):
     log_workflow(workflow_id, "plan_created", plan=plan, acceptance_criteria=acceptance_criteria)
     log_agent("planner", "plan_created", workflow_id, steps=len(plan), acceptance_criteria=acceptance_criteria, config=selected_agents["planner"])
 
-    delegation = {
-        "delegated_by": "supervisor",
-        "delegated_to": "placeholder_delegate",
-        "task": "Return a measurable placeholder result for the orchestration lifecycle.",
-        "reason": "v0.4 verifies orchestration boundaries before domain executors are connected.",
-        "direct_domain_execution_by_supervisor": False,
-    }
-    log_workflow(workflow_id, "delegation_decision", delegation=delegation)
-    log_agent("supervisor", "delegation_decision", workflow_id, delegation=delegation)
-
-    artifact = create_placeholder_artifact(workflow_id, request_summary)
-    placeholder_result = {
-        "status": "completed",
-        "artifact_path": str(artifact),
-        "message": "Placeholder delegate completed successfully.",
-    }
-    log_workflow(workflow_id, "placeholder_task_completed", result=placeholder_result)
+    if is_coding_request(request_summary):
+        delegation = {
+            "delegated_by": "supervisor",
+            "delegated_to": "openhands",
+            "task": "Delegate software-development work to the OpenHands engineering subsystem.",
+            "reason": "The request matches the coding-agent route and requires a specialized engineering subsystem.",
+            "direct_domain_execution_by_supervisor": False,
+        }
+        log_workflow(workflow_id, "delegation_decision", delegation=delegation)
+        log_agent("supervisor", "delegation_decision", workflow_id, delegation=delegation, config=selected_agents["coding"])
+        try:
+            engineering_result = delegate_to_openhands(workflow_id, request_summary)
+        except (error.URLError, TimeoutError) as exc:
+            engineering_result = {"status": "failed", "message": f"OpenHands unavailable: {exc}"}
+        log_workflow(workflow_id, "openhands_task_completed", result=engineering_result)
+        placeholder_result = engineering_result
+    else:
+        delegation = {
+            "delegated_by": "supervisor",
+            "delegated_to": "placeholder_delegate",
+            "task": "Return a measurable placeholder result for the orchestration lifecycle.",
+            "reason": "v0.4 verifies orchestration boundaries before domain executors are connected.",
+            "direct_domain_execution_by_supervisor": False,
+        }
+        log_workflow(workflow_id, "delegation_decision", delegation=delegation)
+        log_agent("supervisor", "delegation_decision", workflow_id, delegation=delegation)
+        artifact = create_placeholder_artifact(workflow_id, request_summary)
+        placeholder_result = {
+            "status": "completed",
+            "artifact_path": str(artifact),
+            "message": "Placeholder delegate completed successfully.",
+        }
+        log_workflow(workflow_id, "placeholder_task_completed", result=placeholder_result)
 
     validation = {
-        "approved": True,
+        "approved": placeholder_result.get("status") == "completed",
         "checks": {
             "workflow_id_present": True,
             "plan_present": True,
             "delegation_logged": True,
             "supervisor_direct_domain_execution": False,
-            "response_ready": True,
+            "response_ready": placeholder_result.get("status") == "completed",
+            "code_result_has_artifact": bool(placeholder_result.get("artifact_path")) if delegation["delegated_to"] == "openhands" else True,
         },
-        "findings": [],
+        "findings": [] if placeholder_result.get("status") == "completed" else [placeholder_result.get("message", "Delegated task failed.")],
     }
     log_workflow(workflow_id, "validation_completed", validation=validation)
     log_agent("reviewer", "validation_completed", workflow_id, validation=validation, config=selected_agents["reviewer"])
 
     response = {
-        "summary": "Nexus v0.4 accepted the request, created a plan, delegated a placeholder task, validated the result, and completed the workflow.",
+        "summary": "Nexus accepted the request, created a plan, delegated the task, validated the result, and completed the workflow.",
         "verification": {
             "workflow_log": str(WORKFLOW_LOG_DIR / f"{workflow_id}.jsonl"),
             "agent_logs": [
                 str(AGENT_LOG_DIR / "supervisor.jsonl"),
                 str(AGENT_LOG_DIR / "planner.jsonl"),
                 str(AGENT_LOG_DIR / "reviewer.jsonl"),
+                str(AGENT_LOG_DIR / "openhands.jsonl"),
             ],
-            "workspace_artifact": str(artifact),
+            "workspace_artifact": placeholder_result.get("artifact_path"),
         },
     }
     log_workflow(workflow_id, "workflow_completed", status="completed", response=response)
@@ -219,7 +266,7 @@ def orchestrate(request_text, source="direct", request_id=None):
         "plan": plan,
         "acceptance_criteria": acceptance_criteria,
         "delegation": delegation,
-        "placeholder_result": placeholder_result,
+        "delegated_result": placeholder_result,
         "validation": validation,
         "selected_agents": selected_agents,
         "response": response,

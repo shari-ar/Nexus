@@ -42,7 +42,11 @@ services:
     environment:
       NEXUS_LOG_LEVEL: ${NEXUS_LOG_LEVEL:-debug}
     volumes:
-      - ../../docker/stubs:/app:ro
+      - ../../integrations:/app/integrations:ro
+      - ../../logs:/var/log/nexus
+      - ../../data/workspaces/openhands:/workspaces
+      - ../../data/projects:/projects:ro
+      - ../../data/generated/code:/generated/code
       - ../../docs:/docs:ro
 
   vllm:

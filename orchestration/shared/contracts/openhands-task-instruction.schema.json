@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.local/contracts/openhands-task-instruction.schema.json",
+  "title": "OpenHands Task Instruction",
+  "type": "object",
+  "required": ["workflow_id", "task_id", "instruction", "workspace"],
+  "properties": {
+    "workflow_id": {"type": "string"},
+    "task_id": {"type": "string"},
+    "instruction": {"type": "string", "minLength": 1},
+    "workspace": {"type": "string"},
+    "repository": {"$ref": "openhands-repository-input.schema.json"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.local/contracts/openhands-repository-input.schema.json",
+  "title": "OpenHands Repository Input",
+  "type": "object",
+  "required": ["repository_path", "workspace"],
+  "properties": {
+    "repository_path": {
+      "type": "string",
+      "description": "Read-only project path mounted for engineering context."
+    },
+    "workspace": {
+      "type": "string",
+      "description": "Isolated OpenHands workspace name under data/workspaces/openhands."
+    },
+    "branch": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

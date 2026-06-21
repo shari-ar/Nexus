@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.local/contracts/openhands-result.schema.json",
+  "title": "OpenHands Engineering Result",
+  "type": "object",
+  "required": ["workflow_id", "task_id", "status", "generated_diff", "test_result", "final_summary", "artifact_path"],
+  "properties": {
+    "workflow_id": {"type": "string"},
+    "task_id": {"type": "string"},
+    "status": {"type": "string"},
+    "generated_diff": {"type": "string"},
+    "test_result": {"type": "string"},
+    "final_summary": {"type": "string"},
+    "artifact_path": {"type": "string"}
+  },
+  "additionalProperties": true
+}

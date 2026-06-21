@@ -6,6 +6,11 @@ data/**
 !data/.gitkeep
 !data/workspaces/
 !data/workspaces/.gitkeep
+!data/workspaces/openhands/
+!data/workspaces/openhands/.gitkeep
+!data/generated/
+!data/generated/code/
+!data/generated/code/.gitkeep
 logs/**
 !logs/.gitkeep
 !logs/agents/
