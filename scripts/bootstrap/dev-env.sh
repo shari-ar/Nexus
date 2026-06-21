@@ -26,3 +26,7 @@ printf 'Nexus development directories are ready.\n'
 printf 'Data: %s\n' "$ROOT_DIR/data"
 printf 'Memory: %s\n' "$ROOT_DIR/memory"
 printf 'Logs: %s\n' "$ROOT_DIR/logs"
+
+if [ "${NEXUS_SKIP_CONFIG_VALIDATION:-0}" != "1" ]; then
+  python3 "$ROOT_DIR/scripts/validation/validate-agent-configs.py"
+fi

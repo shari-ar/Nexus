@@ -23,6 +23,35 @@ for runtime_dir in (WORKFLOW_LOG_DIR, AGENT_LOG_DIR, WORKSPACE_DIR):
     runtime_dir.mkdir(parents=True, exist_ok=True)
 
 
+
+def load_agent_config(agent_id):
+    config_path = CONFIG_DIR / "agents" / f"{agent_id}.yaml"
+    if not config_path.exists():
+        return {"id": agent_id, "config_path": str(config_path), "loaded": False}
+    role = "unknown"
+    model_profile = "unknown"
+    permission_policy = "unknown"
+    for line in config_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("role:"):
+            role = stripped.split(":", 1)[1].strip()
+        if stripped.startswith("model_profile:"):
+            model_profile = stripped.split(":", 1)[1].strip()
+        if stripped.startswith("permission_policy:"):
+            permission_policy = stripped.split(":", 1)[1].strip()
+    return {
+        "id": agent_id,
+        "config_path": str(config_path),
+        "loaded": True,
+        "role": role,
+        "model_profile": model_profile,
+        "permission_policy": permission_policy,
+    }
+
+
+def load_core_agent_configs():
+    return {agent_id: load_agent_config(agent_id) for agent_id in ["supervisor", "planner", "reviewer"]}
+
 def utc_timestamp():
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -120,8 +149,9 @@ def orchestrate(request_text, source="direct", request_id=None):
     if not request_summary:
         request_summary = "Run the Nexus v0.4 orchestration smoke test."
 
-    log_workflow(workflow_id, "workflow_created", request=request_summary, environment=NEXUS_ENV, source=source, request_id=request_id)
-    log_agent("supervisor", "intake_received", workflow_id, request=request_summary, source=source, request_id=request_id)
+    selected_agents = load_core_agent_configs()
+    log_workflow(workflow_id, "workflow_created", request=request_summary, environment=NEXUS_ENV, source=source, request_id=request_id, selected_agents=selected_agents)
+    log_agent("supervisor", "intake_received", workflow_id, request=request_summary, source=source, request_id=request_id, config=selected_agents["supervisor"])
 
     plan = build_plan()
     acceptance_criteria = [
@@ -131,7 +161,7 @@ def orchestrate(request_text, source="direct", request_id=None):
         "The supervisor records delegation instead of executing the domain task directly.",
     ]
     log_workflow(workflow_id, "plan_created", plan=plan, acceptance_criteria=acceptance_criteria)
-    log_agent("planner", "plan_created", workflow_id, steps=len(plan), acceptance_criteria=acceptance_criteria)
+    log_agent("planner", "plan_created", workflow_id, steps=len(plan), acceptance_criteria=acceptance_criteria, config=selected_agents["planner"])
 
     delegation = {
         "delegated_by": "supervisor",
@@ -163,7 +193,7 @@ def orchestrate(request_text, source="direct", request_id=None):
         "findings": [],
     }
     log_workflow(workflow_id, "validation_completed", validation=validation)
-    log_agent("reviewer", "validation_completed", workflow_id, validation=validation)
+    log_agent("reviewer", "validation_completed", workflow_id, validation=validation, config=selected_agents["reviewer"])
 
     response = {
         "summary": "Nexus v0.4 accepted the request, created a plan, delegated a placeholder task, validated the result, and completed the workflow.",
@@ -191,6 +221,7 @@ def orchestrate(request_text, source="direct", request_id=None):
         "delegation": delegation,
         "placeholder_result": placeholder_result,
         "validation": validation,
+        "selected_agents": selected_agents,
         "response": response,
     }
 
@@ -229,6 +260,7 @@ class Handler(BaseHTTPRequestHandler):
                     "workspace_dir_present": WORKSPACE_DIR.exists(),
                     "workflow_log_dir": str(WORKFLOW_LOG_DIR),
                     "agent_log_dir": str(AGENT_LOG_DIR),
+                    "core_agents": load_core_agent_configs(),
                 },
             )
             return

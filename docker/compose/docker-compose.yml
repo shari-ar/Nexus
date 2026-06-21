@@ -135,6 +135,28 @@ services:
       - orchestration
       - ui
 
+  config-validator:
+    build:
+      context: ../..
+      dockerfile: docker/crewai/Dockerfile
+    networks:
+      - nexus-control-plane
+    environment:
+      <<: *nexus-common-env
+      NEXUS_SERVICE_NAME: config-validator
+      NEXUS_SERVICE_ROLE: Agent configuration validation
+      NEXUS_SERVICE_VERSION: v0.6
+    command:
+      - python
+      - /app/scripts/validation/validate-agent-configs.py
+    volumes:
+      - ../../configs:/app/configs:ro
+      - ../../prompts:/app/prompts:ro
+      - ../../orchestration:/app/orchestration:ro
+      - ../../scripts:/app/scripts:ro
+    profiles:
+      - validation
+
   openhands:
     <<: *nexus-common
     build: *nexus-stub-build

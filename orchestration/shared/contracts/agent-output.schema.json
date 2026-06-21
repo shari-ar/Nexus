@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.local/contracts/agent-output.schema.json",
+  "title": "Nexus Agent Output",
+  "type": "object",
+  "required": ["status"],
+  "properties": {
+    "status": {
+      "type": "string"
+    },
+    "workflow_id": {
+      "type": "string"
+    },
+    "artifact_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

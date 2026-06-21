@@ -1,0 +1,32 @@
+agent:
+  id: coding
+  display_name: Nexus Coding Agent
+  version: v0.6
+  role: software_engineering_agent
+  responsibility: Analyze repositories, propose implementation steps, and prepare coding-task handoffs for execution subsystems.
+  boundary: Handles software-development planning and handoff contracts; direct execution remains controlled by approved engineering tools or subsystems.
+  prompt_template: prompts/coding.md
+  shared_policy_template: prompts/shared-policies.md
+  model_profile: coding
+  permission_policy: software_engineering
+  allowed_tools:
+    - filesystem_read
+    - terminal_read
+  lifecycle_events:
+    - coding_task_selected
+    - coding_handoff_prepared
+  input_contract:
+    schema: orchestration/shared/contracts/agent-input.schema.json
+    required_fields:
+      - request
+      - workspace
+  output_contract:
+    schema: orchestration/shared/contracts/agent-output.schema.json
+    format: application/json
+    required_fields:
+      - task_summary
+      - recommended_validation
+      - artifact_paths
+  validation:
+    schema: orchestration/shared/contracts/validation-result.schema.json
+    requires_artifact_boundary: true

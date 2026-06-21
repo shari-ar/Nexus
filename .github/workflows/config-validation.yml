@@ -1,0 +1,38 @@
+name: Validate Nexus Configuration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "configs/**"
+      - "orchestration/shared/contracts/**"
+      - "prompts/**"
+      - "scripts/validation/**"
+      - ".github/workflows/config-validation.yml"
+  pull_request:
+    paths:
+      - "configs/**"
+      - "orchestration/shared/contracts/**"
+      - "prompts/**"
+      - "scripts/validation/**"
+      - ".github/workflows/config-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-agent-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate agent YAML and contracts
+        run: python3 scripts/validation/validate-agent-configs.py

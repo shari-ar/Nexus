@@ -1,0 +1,32 @@
+agent:
+  id: documentation
+  display_name: Nexus Documentation Agent
+  version: v0.6
+  role: documentation_agent
+  responsibility: Prepare technical, operator, and user documentation outputs from validated workflow context.
+  boundary: Produces documentation artifacts only within approved documentation paths and templates.
+  prompt_template: prompts/documentation.md
+  shared_policy_template: prompts/shared-policies.md
+  model_profile: reasoning
+  permission_policy: documentation
+  allowed_tools:
+    - filesystem_read
+    - documentation_write
+  lifecycle_events:
+    - documentation_task_selected
+    - documentation_artifact_prepared
+  input_contract:
+    schema: orchestration/shared/contracts/agent-input.schema.json
+    required_fields:
+      - request
+      - audience
+  output_contract:
+    schema: orchestration/shared/contracts/agent-output.schema.json
+    format: application/json
+    required_fields:
+      - document_type
+      - artifact_paths
+      - verification_steps
+  validation:
+    schema: orchestration/shared/contracts/validation-result.schema.json
+    requires_audience_check: true

@@ -1,0 +1,43 @@
+version: v0.6
+default_policy: orchestration_core
+tool_registry:
+  filesystem_read:
+    description: Read approved project files and workspace metadata.
+  terminal_read:
+    description: Run read-only terminal inspection commands through approved execution controls.
+  docker_compose_read:
+    description: Inspect Docker Compose configuration, service status, and health output.
+  documentation_write:
+    description: Prepare documentation artifacts in approved documentation paths.
+policies:
+  orchestration_core:
+    description: Planning, routing, delegation, and response integration without direct domain execution.
+    allowed_tools: []
+    allowed_integrations:
+      - planner
+      - reviewer
+      - placeholder_delegate
+  review_core:
+    description: Output validation and policy checking without direct domain execution.
+    allowed_tools: []
+    allowed_integrations: []
+  software_engineering:
+    description: Software-development handoff preparation with controlled read-only inspection.
+    allowed_tools:
+      - filesystem_read
+      - terminal_read
+    allowed_integrations:
+      - openhands
+  documentation:
+    description: Documentation artifact preparation within approved documentation locations.
+    allowed_tools:
+      - filesystem_read
+      - documentation_write
+    allowed_integrations: []
+  devops:
+    description: Operational handoff preparation with controlled Docker and terminal inspection.
+    allowed_tools:
+      - docker_compose_read
+      - terminal_read
+    allowed_integrations:
+      - docker

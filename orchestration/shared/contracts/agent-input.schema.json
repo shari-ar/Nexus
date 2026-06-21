@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.local/contracts/agent-input.schema.json",
+  "title": "Nexus Agent Input",
+  "type": "object",
+  "required": ["request"],
+  "properties": {
+    "request": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "workflow_id": {
+      "type": "string"
+    },
+    "workspace": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string"
+    },
+    "audience": {
+      "type": "string"
+    },
+    "delegated_result": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

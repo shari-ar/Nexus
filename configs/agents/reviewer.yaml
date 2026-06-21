@@ -1,19 +1,29 @@
 agent:
   id: reviewer
   display_name: Nexus Reviewer
-  version: v0.4
+  version: v0.6
   role: orchestration_reviewer
   responsibility: Validate workflow structure, delegated output, policy alignment, and completion status.
   boundary: Reviews and validates outputs; does not perform delegated domain execution.
   prompt_template: prompts/reviewer.md
   shared_policy_template: prompts/shared-policies.md
   model_profile: reasoning
+  permission_policy: review_core
   allowed_tools: []
   lifecycle_events:
     - validation_completed
+  input_contract:
+    schema: orchestration/shared/contracts/agent-input.schema.json
+    required_fields:
+      - workflow_id
+      - delegated_result
   output_contract:
+    schema: orchestration/shared/contracts/agent-output.schema.json
     format: application/json
     required_fields:
       - approved
       - checks
       - findings
+  validation:
+    schema: orchestration/shared/contracts/validation-result.schema.json
+    requires_policy_check: true

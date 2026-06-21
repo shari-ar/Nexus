@@ -1,0 +1,32 @@
+agent:
+  id: devops
+  display_name: Nexus DevOps Agent
+  version: v0.6
+  role: devops_agent
+  responsibility: Prepare deployment, Docker, observability, and operational automation handoffs.
+  boundary: Recommends and validates operational actions within approved infrastructure permissions.
+  prompt_template: prompts/devops.md
+  shared_policy_template: prompts/shared-policies.md
+  model_profile: reasoning
+  permission_policy: devops
+  allowed_tools:
+    - docker_compose_read
+    - terminal_read
+  lifecycle_events:
+    - devops_task_selected
+    - operational_handoff_prepared
+  input_contract:
+    schema: orchestration/shared/contracts/agent-input.schema.json
+    required_fields:
+      - request
+      - environment
+  output_contract:
+    schema: orchestration/shared/contracts/agent-output.schema.json
+    format: application/json
+    required_fields:
+      - operational_summary
+      - health_checks
+      - rollback_notes
+  validation:
+    schema: orchestration/shared/contracts/validation-result.schema.json
+    requires_health_check: true

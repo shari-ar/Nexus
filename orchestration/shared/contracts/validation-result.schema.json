@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.local/contracts/validation-result.schema.json",
+  "title": "Nexus Validation Result",
+  "type": "object",
+  "required": ["approved", "checks", "findings"],
+  "properties": {
+    "approved": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "object"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}
